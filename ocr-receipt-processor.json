@@ -1,0 +1,851 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "9954f1f9-ef3a-42c7-898c-65eb26993eb7",
+      "name": "Tally Trigger",
+      "type": "n8n-nodes-tallyforms.tallyTrigger",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        224
+      ],
+      "webhookId": "70231c7e-c60c-4f18-9538-bf5650cce200"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a74e037d-7b9b-45fd-a571-fb88fdd86766",
+              "leftValue": "={{ $json.question_KDW1P7.value }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0b514a4d-5032-40d5-9444-faa1d5c0d073",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -672,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const value = $json.question_KDW1P7.value;\n\nconst urls = Array.isArray(value)\n  ? value\n  : String(value || '')\n      .split(',')\n      .map(u => u.trim())\n      .filter(Boolean);\n\nreturn urls.map(url => ({\n  json: {\n    ...$json,\n    fileUrl: url,\n  },\n}));"
+      },
+      "id": "a556b171-c2f3-47ba-be6e-309eec13606f",
+      "name": "Split File URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "4c635cab-40e2-44b5-8ae8-1ab1013e3bb9",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "ce9a50b5-13dc-4eac-adb0-56641850f8ab",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ниже находится текст документа.\n\n{{ $json.text }}\n\nИзвлеки всю информацию.\n\nВерни ТОЛЬКО JSON.\n\n{\n  \"document_type\": \"\",\n  \"vendor\": \"\",\n  \"date\": \"\",\n  \"currency\": \"\",\n  \"total\": \"\",\n  \"items\": []\n}",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "id": "ae3927ac-6c7a-4b5c-95fa-3d158403de41",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "b241942c-49f7-4801-80ba-763375c04131",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.fileUrl}} ",
+                    "rightValue": ".pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "45ddc348-144d-42b7-8d10-b552b7979985"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "69b767ee-ac86-40f4-996c-0f01f76559e4",
+                    "leftValue": "={{$json.fileUrl}}",
+                    "rightValue": ".jpg",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "557b0296-7671-4e0a-9f48-77f781c906ab",
+                    "leftValue": "={{$json.fileUrl}}",
+                    "rightValue": ".jpeg",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1588b8e2-3761-4332-9238-df242d8bcb54",
+                    "leftValue": "={{$json.fileUrl}}",
+                    "rightValue": ".png",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5d8fbb30-d248-4cca-98d9-54842e4c5d62",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "id": "bcdcd854-6082-46d6-99d0-e531e7e604fa",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ниже находятся  всех файлов.\n\n{{ $json.text }}\n\nОбъедини их.\n\nУдали дубликаты.\n\nЕсли один документ дополняет другой — объедини данные.\n\nВерни один итоговый JSON без пояснений.",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "id": "a6635739-be83-4871-a176-d4e2ac5e5227",
+      "name": "Basic LLM Chain4",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1024,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($json.text || '').trim();\n\n// Strip ```json ... ``` or ``` ... ``` code fences if present\nlet cleaned = raw\n  .replace(/^```(?:json)?\\s*/i, '')\n  .replace(/```\\s*$/i, '')\n  .trim();\n\nlet data;\ntry {\n  data = JSON.parse(cleaned);\n} catch (e) {\n  // Fallback: extract the first {...} block\n  const match = cleaned.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    data = JSON.parse(match[0]);\n  } else {\n    throw new Error('Could not parse JSON from LLM output: ' + raw);\n  }\n}\n\nreturn [{\n  json: {\n    document_type: data.document_type ?? '',\n    vendor: data.vendor ?? '',\n    date: data.date ?? '',\n    currency: data.currency ?? '',\n    total: data.total ?? '',\n    items: data.items ?? [],\n  },\n}];"
+      },
+      "id": "5c9fc13b-f4b9-4228-8383-19d36a6b74af",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ThagWcZYt0gajjQn5MjLy7GTz2X2yBVG9OdDNJs5Htw",
+          "mode": "list",
+          "cachedResultName": "i скоро ebanysь",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ThagWcZYt0gajjQn5MjLy7GTz2X2yBVG9OdDNJs5Htw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ThagWcZYt0gajjQn5MjLy7GTz2X2yBVG9OdDNJs5Htw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Doc Type": "={{ $json.document_type }}",
+            "Vendor": "={{ $json.vendor }}",
+            "Date": "={{ $json.date }}",
+            "Currency": "={{ $json.currency }}",
+            "Total": "={{ $json.total }}"
+          },
+          "schema": [
+            {
+              "id": "Doc Type",
+              "displayName": "Doc Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Vendor",
+              "displayName": "Vendor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Currency",
+              "displayName": "Currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Total",
+              "displayName": "Total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3af676be-6dea-4610-8253-9845907e9d04",
+      "name": "Append or update row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1600,
+        224
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "y3kMrmjaOVFRJfrX",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "9fa0efc1-7804-40a6-8a45-27fe278a9ce7",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "29ef835f-f98a-47e3-b524-7712ff75f7d5",
+      "name": "HTTP Request2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fileUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "683420a6-1ca0-4ad8-bb2e-b821bcb30da8",
+      "name": "HTTP Request3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        },
+        "text": "You are an OCR and document analysis expert.\n\nRead the entire image carefully.\n\nExtract ALL visible text exactly as it appears.\n\nDo not summarize.\nDo not interpret.\nDo not translate.\n\nPreserve formatting whenever possible.\n\nReturn ONLY the extracted text.",
+        "imageUrls": "={{$json.fileUrl}}",
+        "options": {}
+      },
+      "id": "fd89158b-4431-4cfb-b4b4-916487f3d315",
+      "name": "Analyze image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        160
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "text": "You are an OCR and document analysis expert.\n\nRead the entire image carefully.\n\nExtract ALL visible text exactly as it appears.\n\nDo not summarize.\nDo not interpret.\nDo not translate.\n\nPreserve formatting whenever possible.\n\nReturn ONLY the extracted text.",
+        "imageUrls": "={{$json.fileUrl}}",
+        "options": {}
+      },
+      "id": "52e46a08-a0bd-4064-9a74-f6a294417b70",
+      "name": "Analyze image1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "text": "You are an OCR and document analysis expert.\n\nRead the entire image carefully.\n\nExtract ALL visible text exactly as it appears.\n\nDo not summarize.\nDo not interpret.\nDo not translate.\n\nPreserve formatting whenever possible.\n\nReturn ONLY the extracted text.",
+        "imageUrls": "={{$json.fileUrl}}",
+        "options": {}
+      },
+      "id": "33b49b4e-196d-4ebe-ab63-0fe0350c89c3",
+      "name": "Analyze image2",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ниже находится описание изображения, полученное Vision.\n\n{{ $json.text }}\n\nИзвлеки всю информацию.\n\nВерни ТОЛЬКО JSON.\n\n{\n  \"document_type\": \"\",\n  \"vendor\": \"\",\n  \"date\": \"\",\n  \"currency\": \"\",\n  \"total\": \"\",\n  \"items\": []\n}",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "id": "2cd638ab-4c7c-41bc-85b1-572165a3207c",
+      "name": "Basic LLM Chain1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ниже находится описание изображения, полученное Vision.\n\n{{ $json.text }}\n\nИзвлеки всю информацию.\n\nВерни ТОЛЬКО JSON.\n\n{\n  \"document_type\": \"\",\n  \"vendor\": \"\",\n  \"date\": \"\",\n  \"currency\": \"\",\n  \"total\": \"\",\n  \"items\": []\n}",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "id": "e1a325ea-2bfb-408f-b7d0-d8528d7cfa35",
+      "name": "Basic LLM Chain2",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ниже находится описание изображения, полученное Vision.\n\n{{ $json.text }}\n\nИзвлеки всю информацию.\n\nВерни ТОЛЬКО JSON.\n\n{\n  \"document_type\": \"\",\n  \"vendor\": \"\",\n  \"date\": \"\",\n  \"currency\": \"\",\n  \"total\": \"\",\n  \"items\": []\n}",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "id": "42055523-fff0-44fe-84e7-31a6f938c509",
+      "name": "Basic LLM Chain3",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        448
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Tally Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split File URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split File URLs": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain3",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Basic LLM Chain4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain4": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Analyze image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Analyze image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image2": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d22c276a-d433-4a69-9a48-5d1190a691c5",
+  "meta": {
+    "instanceId": "00292627de41b7257811b4e0713eacd9ae64aab0f9200a88dfa25aeac7d371ff"
+  },
+  "nodeGroups": [],
+  "id": "kpQkNvskV4cnXeUY",
+  "tags": []
+}
